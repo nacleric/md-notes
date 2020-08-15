@@ -5,9 +5,10 @@ import os
 # TODO: convert current_directory into instance variable
 # TODO: fix this fking bullshit
 class RouteHandler(BaseHTTPRequestHandler):
-
-    def __init__(self, current_directory=os.curdir):
-        self.current_directory = current_directory
+    current_directory = os.curdir
+    style = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/dark.min.css">'
+    #def __init__(self, current_directory=os.curdir):
+    #    self.current_directory = current_directory
 
     def do_GET(self):
         self.send_response(200)
@@ -21,7 +22,7 @@ class RouteHandler(BaseHTTPRequestHandler):
 
     # Entry point
     def render_table_of_contents(self) -> str:
-        table_of_contents = ""
+        table_of_contents = self.style 
         for directory in os.listdir(self.current_directory):
             if os.path.isdir(directory):
                 table_of_contents += f"<h1><a href='{directory}'> {directory} </a></h1>"
@@ -29,7 +30,7 @@ class RouteHandler(BaseHTTPRequestHandler):
 
     def render_md_file_list(self) -> str:
         # TODO: Handle errors for directories/routes that don't exist
-        md_file_list = ""
+        md_file_list = self.style
         for item in os.listdir(self.current_directory):
             if item[-3:] == ".md":
                 md_file_list += f"<h1> {item} </h1>"
