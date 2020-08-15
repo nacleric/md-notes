@@ -2,8 +2,12 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import os
 
 
+# TODO: convert current_directory into instance variable
+# TODO: fix this fking bullshit
 class RouteHandler(BaseHTTPRequestHandler):
-    current_directory = os.curdir
+
+    def __init__(self, current_directory=os.curdir):
+        self.current_directory = current_directory
 
     def do_GET(self):
         self.send_response(200)
@@ -12,32 +16,31 @@ class RouteHandler(BaseHTTPRequestHandler):
         if self.path == "/":
             self.wfile.write(self.render_table_of_contents().encode())
         else:
-            self.wfile.write(self.update_directory().encode())
+            print(self.update_directory())
+            self.wfile.write(self.render_md_file_list().encode())
 
-    # Helper functions for routes
     # Entry point
-    def render_table_of_contents(self, current_directory=current_directory) -> str:
+    def render_table_of_contents(self) -> str:
         table_of_contents = ""
-        for directory in os.listdir(current_directory):
+        for directory in os.listdir(self.current_directory):
             if os.path.isdir(directory):
                 table_of_contents += f"<h1><a href='{directory}'> {directory} </a></h1>"
         return table_of_contents
 
     def render_md_file_list(self) -> str:
-        # TODO: placeholder code
+        # TODO: Handle errors for directories/routes that don't exist
         md_file_list = ""
-        files = "foo"
-        for file in files:
-            if file[-3:] == ".md":
-                md_file_list += f"<h1> {file} </h1>"
+        for item in os.listdir(self.current_directory):
+            if item[-3:] == ".md":
+                md_file_list += f"<h1> {item} </h1>"
+            elif os.path.isdir(item):
+                md_file_list += f"<h1><a href='{item}'> {item} </a></h1>"
         return md_file_list
 
     # If something gets clicked, recursively find all the other directories
-    def update_directory(self, current_directory=current_directory) -> str:
-        # TODO: This might cause a bug /foo/bar -> .//foo/bar
-        # current_directory = f"{os.curdir}/{self.path}"
-        current_directory = f".{self.path}"
-        return current_directory
+    def update_directory(self) -> str:
+        self.current_directory = f".{self.path}"
+        return self.current_directory
 
 
 def run_server(handler_class=RouteHandler) -> None:
