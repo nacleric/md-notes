@@ -4,6 +4,11 @@ import markdown
 import os
 
 
+STYLE = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/dark.min.css">'
+
+
+# TODO: convert current_directory into instance variable
+# TODO: fix this fking bullshit
 class RouteHandler(BaseHTTPRequestHandler):
     current_directory = os.curdir
     STYLE = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/dark.min.css">'
@@ -20,16 +25,14 @@ class RouteHandler(BaseHTTPRequestHandler):
             if os.path.isdir(new_directory):
                 self.wfile.write(self.render_file_list().encode())
             else:
-                self.wfile.write(self.render_md(new_directory).encode())
+                self.wfile.write(render_md(new_directory).encode())
 
     # Entry point
     def render_table_of_contents(self) -> str:
-        table_of_contents = self.STYLE
+        table_of_contents = self.STYLE 
         for directory in os.listdir(self.current_directory):
             if os.path.isdir(directory):
-                table_of_contents += (
-                    f"<h1><a href='{directory}'> /{directory} </a></h1>"
-                )
+                table_of_contents += f"<h1><a href='{directory}'> /{directory} </a></h1>"
         return table_of_contents
 
     def render_file_list(self) -> str:
@@ -44,17 +47,18 @@ class RouteHandler(BaseHTTPRequestHandler):
                 md_file_list += f"<h1><a href='{self.path}'> /{item} </a></h1>"
         return md_file_list
 
-    def render_md(self, file: str) -> str:
-        html = self.STYLE
-        with open(file, "r", encoding="utf-8") as md:
-            text = md.read()
-        html += markdown.markdown(text)
-        return html
-
     # If something gets clicked, recursively find all the other directories
     def update_directory(self) -> str:
         self.current_directory = f".{self.path}"
         return self.current_directory
+
+
+def render_md(file: str) -> str:
+    html = STYLE
+    with open(file, "r", encoding="utf-8") as md:
+        text = md.read()
+    html += markdown.markdown(text)
+    return html
 
 
 def run_server(handler_class=RouteHandler) -> None:
