@@ -8,7 +8,6 @@ STYLE = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.
 
 
 # TODO: convert current_directory into instance variable
-# TODO: fix this fking bullshit
 class RouteHandler(BaseHTTPRequestHandler):
     current_directory = os.curdir
     STYLE = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/dark.min.css">'
