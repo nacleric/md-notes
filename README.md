@@ -1,7 +1,6 @@
-# Intro
-CLI tool that starts up a webserver to display markdown files in your current directory
+# Practicing some Rust
+Bad Rust with the hopes of good Rust in the future.
+Commandline utility to quickly view markdown files.
 
-# Idea
-- Argparse with options to exclude directories and/or files
-- Argparse to change port number
-- Argparse for proper path
+## Example
+```cargo run [file] ```
