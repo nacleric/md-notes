@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use pulldown_cmark::{html, Parser};
 use structopt::StructOpt;
-use tiny_http::{Response, Server};
+use tiny_http::{Response, Request, Server};
 use webbrowser;
 
 #[derive(StructOpt)]
@@ -10,6 +10,8 @@ struct Cli {
     // Add more fields for more arguments
     #[structopt(parse(from_os_str))]
     path: PathBuf,
+
+    port: String,
 }
 
 fn is_md_file<P>(path: P) -> bool
@@ -21,12 +23,12 @@ where
         .is_some() // Option<&OsStr> -> bool
 }
 
-fn parse_arg_to_md() -> String {
-    let args = Cli::from_args();
-    let mdfile = is_md_file(&args.path);
+fn process_md(path: &PathBuf) -> String {
+    // let args = Cli::from_args();
+    let mdfile = is_md_file(path);
 
     if mdfile {
-        let result = std::fs::read_to_string(&args.path);
+        let result = std::fs::read_to_string(path);
         let content = match result {
             Ok(content) => content,
             Err(error) => {
@@ -43,31 +45,46 @@ fn parse_arg_to_md() -> String {
     }
 }
 
-fn main() {
-    let mut html_body = String::from("<link rel='stylesheet' href='https://unpkg.com/sakura.css/css/sakura.css' type='text/css'>");
-    let html_output = parse_arg_to_md();
-    html_body.push_str(&html_output);
+struct WebServer<'a> {
+    path: &'a PathBuf,
+    port: String,
+}
 
-    let server = Server::http("0.0.0.0:8000");
-    println!("Port: 8000, Server is running...");
-    webbrowser::open("http://localhost:8000/").unwrap();
+impl WebServer<'_> {
+    fn send_response(&self, request: Request) {
+        let mut html_body = String::from("<link rel='stylesheet' href='https://unpkg.com/sakura.css/css/sakura.css' type='text/css'>");
+        let html_output = process_md(self.path);
+        html_body.push_str(&html_output);
 
-    match server {
-        Ok(server) => loop {
-            // Prints requests that hit the server
-            match server.recv() {
-                Ok(request) => {
-                    println!("{:?}", request);
-                    let response = Response::from_data(html_body.clone().into_bytes());
-                    request.respond(response).unwrap();
-                }
+        let response = Response::from_data(html_body.clone().into_bytes());
+        request.respond(response).unwrap(); // TODO: Get rid of unwrap()
+    }
+
+    fn run(&self) {
+        let result = Server::http("0.0.0.0:8000");
+        let server = match result {
+            Ok(server) => server,
+            Err(error) => panic!("This will be an error: {:?}", error),
+        };
+        println!("Port: 8000, Server is running...");
+        webbrowser::open("http://localhost:8000/").unwrap(); // TODO: Get rid of unwrap()
+
+        loop {
+            let request = match server.recv() {
+                Ok(request) => request,
                 Err(error) => {
                     panic!("Error: {:?}", error);
                 }
             };
-        },
-        Err(error) => {
-            panic!("This will be an error: {:?}", error);
+            println!("{:?}", request);
+            self.send_response(request);
         }
     }
+}
+
+fn main() {
+    let args = Cli::from_args();
+    
+    let server = WebServer{ path: &args.path, port: String::from("8000") };
+    server.run();
 }
