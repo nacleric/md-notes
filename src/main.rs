@@ -24,7 +24,6 @@ where
 }
 
 fn process_md(path: &PathBuf) -> String {
-    // let args = Cli::from_args();
     let mdfile = is_md_file(path);
 
     if mdfile {
@@ -47,7 +46,7 @@ fn process_md(path: &PathBuf) -> String {
 
 struct WebServer<'a> {
     path: &'a PathBuf,
-    port: String,
+    port: &'a String,
 }
 
 impl WebServer<'_> {
@@ -61,13 +60,16 @@ impl WebServer<'_> {
     }
 
     fn run(&self) {
-        let result = Server::http("0.0.0.0:8000");
+        let mut address = String::from("http://localhost:");
+        address.push_str(self.port);
+
+        let result = Server::http(&address[7..address.len()]);
         let server = match result {
             Ok(server) => server,
-            Err(error) => panic!("This will be an error: {:?}", error),
+            Err(error) => panic!("{:?}", error),
         };
-        println!("Port: 8000, Server is running...");
-        webbrowser::open("http://localhost:8000/").unwrap(); // TODO: Get rid of unwrap()
+        println!("Port: {}, Server is running...", self.port);
+        webbrowser::open(&address[..]).unwrap(); // TODO: Get rid of unwrap()
 
         loop {
             let request = match server.recv() {
@@ -85,6 +87,6 @@ impl WebServer<'_> {
 fn main() {
     let args = Cli::from_args();
     
-    let server = WebServer{ path: &args.path, port: String::from("8000") };
+    let server = WebServer{ path: &args.path, port: &args.port };
     server.run();
 }
