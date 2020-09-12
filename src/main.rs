@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use pulldown_cmark::{html, Parser};
 use structopt::StructOpt;
-use tiny_http::{Response, Request, Server};
+use tiny_http::{Request, Response, Server};
 use webbrowser;
 
 #[derive(StructOpt)]
@@ -11,6 +11,7 @@ struct Cli {
     #[structopt(parse(from_os_str))]
     path: PathBuf,
 
+    #[structopt(default_value = "5000")]
     port: String,
 }
 
@@ -86,7 +87,10 @@ impl WebServer<'_> {
 
 fn main() {
     let args = Cli::from_args();
-    
-    let server = WebServer{ path: &args.path, port: &args.port };
+
+    let server = WebServer {
+        path: &args.path,
+        port: &args.port,
+    };
     server.run();
 }
