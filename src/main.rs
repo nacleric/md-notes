@@ -8,10 +8,10 @@ use webbrowser;
 #[derive(StructOpt)]
 struct Cli {
     // Add more fields for more arguments
-    #[structopt(parse(from_os_str))]
+    #[structopt(help = "Input path to file", parse(from_os_str))]
     path: PathBuf,
 
-    #[structopt(default_value = "5000")]
+    #[structopt(help = "Input port number", default_value = "5000")]
     port: String,
 }
 
