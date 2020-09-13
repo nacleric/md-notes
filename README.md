@@ -1,11 +1,8 @@
-# Practicing some Rust
-Bad Rust with the hopes of good Rust in the future.
+# About
 Commandline utility to quickly view markdown files.
 
 ## Example
-```cargo run [file] ```
+```mdview <filepath> [port] ```
+Port will be set to `5000` by default.
 
 
-## TODO
-- Add a way to set port number
-- Options to not process markdown
