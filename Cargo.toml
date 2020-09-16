@@ -1,10 +1,11 @@
 [package]
 name = "mdview"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Eric Ng <naclericny@gmail.com>"]
 edition = "2018"
 description = "Command line utility to quickly view markdown files in the browser"
 license = "MIT"
+repository = "https://github.com/nacleric/mdview"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

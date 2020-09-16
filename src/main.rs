@@ -1,5 +1,5 @@
-use std::path::PathBuf;
 use std::io::{BufRead, BufReader};
+use std::path::PathBuf;
 
 use pulldown_cmark::{html, Parser};
 use structopt::StructOpt;
@@ -105,16 +105,26 @@ fn debug(path: &PathBuf) {
         .unwrap();
     let file = std::fs::File::open(&path).unwrap();
     let file = BufReader::new(file);
+    let mut line_count = 0;
     for line in file.lines() {
-        // Implement line counter and remove .expect()
-        let line = line.expect("this form of error handling is bad");
-        let errors = checker
-            .check(&line)
-            .unwrap();
+        line_count += 1;
+        let line = match line {
+            Ok(line) => line,
+            Err(error) => {
+                panic!("Error: {:?}", error);
+            }
+        };
+        let errors = checker.check(&line).unwrap();
         for e in errors {
-            println!("'{}' (pos: {}) is misspelled!", &e.misspelled, e.position);
+            println!(
+                "'{}' (line: {} pos: {}) is misspelled!",
+                &e.misspelled, line_count, e.position
+            );
             if !e.suggestions.is_empty() {
-                println!("Maybe you meant '{}'?", &e.suggestions[0]);
+                println!(
+                    "Maybe you meant '{}, {}, {}'?",
+                    &e.suggestions[0], &e.suggestions[1], &e.suggestions[2]
+                );
             }
         }
     }
