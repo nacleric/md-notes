@@ -1,18 +1,29 @@
 use std::path::PathBuf;
+use std::io::{BufRead, BufReader};
 
 use pulldown_cmark::{html, Parser};
 use structopt::StructOpt;
 use tiny_http::{Request, Response, Server};
 use webbrowser;
 
-#[derive(StructOpt)]
-struct Cli {
-    // Add more fields for more arguments
-    #[structopt(help = "Input path to file", parse(from_os_str))]
-    path: PathBuf,
+extern crate ispell;
+use ispell::SpellLauncher;
 
-    #[structopt(help = "Input port number", default_value = "5000")]
-    port: String,
+#[derive(Debug, StructOpt)]
+enum CliArgs {
+    #[structopt(name = "serve", about = "Serve subcommand")]
+    Serve {
+        #[structopt(help = "Input path to file", parse(from_os_str))]
+        path: PathBuf,
+
+        #[structopt(help = "Input port number", default_value = "5000")]
+        port: String,
+    },
+    #[structopt(name = "debug", about = "Debug subcommand")]
+    Debug {
+        #[structopt(help = "Input path to file", parse(from_os_str))]
+        path: PathBuf,
+    },
 }
 
 fn is_md_file<P>(path: P) -> bool
@@ -45,6 +56,7 @@ fn process_md(path: &PathBuf) -> String {
     }
 }
 
+#[derive(Debug)]
 struct WebServer<'a> {
     path: &'a PathBuf,
     port: &'a String,
@@ -85,12 +97,41 @@ impl WebServer<'_> {
     }
 }
 
-fn main() {
-    let args = Cli::from_args();
+fn debug(path: &PathBuf) {
+    let mut checker = SpellLauncher::new()
+        .aspell()
+        .dictionary("en_GB")
+        .launch()
+        .unwrap();
+    let file = std::fs::File::open(&path).unwrap();
+    let file = BufReader::new(file);
+    for line in file.lines() {
+        // Implement line counter and remove .expect()
+        let line = line.expect("this form of error handling is bad");
+        let errors = checker
+            .check(&line)
+            .unwrap();
+        for e in errors {
+            println!("'{}' (pos: {}) is misspelled!", &e.misspelled, e.position);
+            if !e.suggestions.is_empty() {
+                println!("Maybe you meant '{}'?", &e.suggestions[0]);
+            }
+        }
+    }
+}
 
-    let server = WebServer {
-        path: &args.path,
-        port: &args.port,
-    };
-    server.run();
+fn main() {
+    let args = CliArgs::from_args();
+    match args {
+        CliArgs::Serve { path, port } => {
+            let server = WebServer {
+                path: &path,
+                port: &port,
+            };
+            server.run();
+        }
+        CliArgs::Debug { path } => {
+            debug(&path);
+        }
+    }
 }
